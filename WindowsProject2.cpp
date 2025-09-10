@@ -213,53 +213,6 @@ void DrawMSLogo(HDC hdc, int wndWidth, int wndHeight)
     
     return;
 }
-//BOOL DrawMSLogo(HDC hdc, int wndWidth, int wndHeight) 
-//{
-//    //HPEN pen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
-//    //HPEN pen = CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
-//    SelectObject(hdc, pen);
-//
-//    //HBRUSH br = CreateSolidBrush(RGB(255, 255, 255)); 
-//    //SelectObject(hdc, br);
-//
-//    // RED (f25022) (242, 80, 34) brush
-//    //br = (brushStyleFlag) ? CreateSolidBrush(RGB(242, 80, 34)) : CreateHatchBrush(HS_CROSS, RGB(242, 80, 34));
-//    SelectObject(hdc, brMSRed);
-//    Rectangle(hdc, 0, 0, wndWidth / 2, wndHeight / 2);
-//    //if (!Rectangle(hdc, 0, 0, wndWidth / 2, wndHeight / 2))
-//    //{
-//    //    return 1;
-//    //}
-//    
-//    // GREEN (7fba00) (127, 186, 0) brush
-//    //br = (brushStyleFlag) ? CreateSolidBrush(RGB(127, 186, 0)) : CreateHatchBrush(HS_CROSS, RGB(127, 186, 0));
-//    SelectObject(hdc, brMSGreen);
-//    Rectangle(hdc, wndWidth / 2, 0, wndWidth, wndHeight / 2);
-//    //if (!Rectangle(hdc, wndWidth / 2, 0, wndWidth, wndHeight / 2))
-//    //{
-//    //    return 1;
-//    //}
-//    
-//    // BLUE (00a4ef) (0, 164, 239) brush
-//    //br = (brushStyleFlag) ? CreateSolidBrush(RGB(0, 164, 239)) : CreateHatchBrush(HS_CROSS, RGB(0, 164, 239));
-//    SelectObject(hdc, brMSBlue);
-//    Rectangle(hdc, 0, wndHeight / 2, wndWidth / 2, wndHeight);
-//    //if (!Rectangle(hdc, 0, wndHeight / 2, wndWidth / 2, wndHeight))
-//    //{
-//    //    return 1;
-//    //}
-//    
-//    // YELLOW (ffb900) (255, 185, 0) brush
-//    //br = (brushStyleFlag)? CreateSolidBrush(RGB(255, 185, 0)) : CreateHatchBrush(HS_CROSS, RGB(255, 185, 0));
-//    SelectObject(hdc, brMSYellow);
-//    Rectangle(hdc, wndWidth / 2, wndHeight / 2, wndWidth, wndHeight);
-//    //if (!Rectangle(hdc, wndWidth / 2, wndHeight / 2, wndWidth, wndHeight))
-//    //{
-//    //    return 1;
-//    //}
-//
-//    return 0;
-//}
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
