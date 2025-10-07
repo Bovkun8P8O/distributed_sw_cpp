@@ -74,8 +74,9 @@ DWORD WINAPI        ThreadProc3(LPVOID lpParam);        // випадкові п
 DWORD WINAPI        ThreadProc4(LPVOID lpParam);        // підрахунок викликів
 
 int CreateThreadSimple(LPTHREAD_START_ROUTINE ThreadFunc, LPVOID lpParam); // спрощене створення потока
-
 void WaitForThreadsAndSyncHandles();                    // очікування всіх дескрипторів
+void CloseHandles();                                    // закриття дескрипторів потоків, м'ютексів та події
+
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -88,6 +89,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // TODO: Place code here.
     srand(iSeed);
+
+    hMutexType1 = CreateMutexW(NULL, FALSE, NULL);
+    hMutexType2 = CreateMutexW(NULL, FALSE, NULL);
+    hMutexType3 = CreateMutexW(NULL, FALSE, NULL);
+    hMutexType4 = CreateMutexW(NULL, FALSE, NULL);
+
+    hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -196,62 +204,63 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case ID_THREADS_START:
                 if (vhThreads.size() != 0) {
                     SetEvent(hEvent);
+                    InvalidateRect(hWnd, NULL, TRUE);
                     break;
                 }
 
-                hMutexType1 = CreateMutexW(NULL, FALSE, NULL);
-                hMutexType2 = CreateMutexW(NULL, FALSE, NULL);
-                hMutexType3 = CreateMutexW(NULL, FALSE, NULL);
-                hMutexType4 = CreateMutexW(NULL, FALSE, NULL);
-
-                hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
-
                 if (CreateThreadSimple(ThreadProc1, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 if (CreateThreadSimple(ThreadProc2, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 if (CreateThreadSimple(ThreadProc3, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 if (CreateThreadSimple(ThreadProc4, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
-
                 break;
+
             case ID_THREADS_STOP:
                 WaitForMultipleObjects(vhThreads.size(), (HANDLE*)&vhThreads, TRUE, INFINITE);
                 ResetEvent(hEvent);
                 InvalidateRect(hWnd, NULL, TRUE);
-
                 break;
 
             case ID_CREATE_TYPE1:
                 if (CreateThreadSimple(ThreadProc1, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 break;
             case ID_CREATE_TYPE2:
                 if (CreateThreadSimple(ThreadProc2, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 break;
             case ID_CREATE_TYPE3:
                 if (CreateThreadSimple(ThreadProc3, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 break;
             case ID_CREATE_TYPE4:
                 if (CreateThreadSimple(ThreadProc4, NULL) == 1) {
                     WaitForThreadsAndSyncHandles();
+                    CloseHandles();
                     return 1;
                 }
                 break;
@@ -272,16 +281,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDM_EXIT:
                 WaitForMultipleObjects(vhThreads.size(), (HANDLE *)&vhThreads, TRUE, INFINITE);
-                for (int i = vhThreads.size(); i > 0; i--) {
-                    CloseHandle(vhThreads[i]);
-                    vdwThreadIDs.pop_back();
-                    vhThreads.pop_back();
-                }
-                CloseHandle(hMutexType1);
-                CloseHandle(hMutexType2);
-                CloseHandle(hMutexType3);
-                CloseHandle(hMutexType4);
-                CloseHandle(hEvent);
+                CloseHandles();
                 DestroyWindow(hWnd);
                 break;
             default:
@@ -308,11 +308,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             
             // Потік 1
             FrameRect(hdc, &rt1, hBlackBrush);
-            DrawText(hdc, LPCSTR(sz0_AndNaturalsStr), strlen(sz0_AndNaturalsStr), &rt1, DT_SINGLELINE | DT_CENTER); // LPCWSTR
+            DrawText(hdc, LPCSTR(sz0_AndNaturalsStr), strlen(sz0_AndNaturalsStr), &rt1, DT_SINGLELINE | DT_CENTER); 
 
             // Потік 2
             FrameRect(hdc, &rt2, hBlackBrush);
-            DrawText(hdc, LPCSTR(szFibonacciStr), strlen(szFibonacciStr), &rt2, DT_SINGLELINE | DT_CENTER);         // LPCSTR
+            DrawText(hdc, LPCSTR(szFibonacciStr), strlen(szFibonacciStr), &rt2, DT_SINGLELINE | DT_CENTER);         
 
             // Потік 3
             FrameRect(hdc, &rt3, hBlackBrush);
@@ -405,17 +405,37 @@ DWORD WINAPI ThreadProc2(LPVOID lpParam) {
         Sleep(1000);
         iThread2Counter += 1;
 
-        iFibonacci_n = iFibonacci_n_2 + iFibonacci_n_1;
-        iFibonacci_n_2 = iFibonacci_n_1;
-        iFibonacci_n_1 = iFibonacci_n;
+        if (iThread2Counter == 1) {
+            sprintf_s(szFibonacciStr, (size_t)iSTR_SIZE - 1,
+                "Thread: %d; n: %I64u",
+                dwCurrThrID, iFibonacci_n_2);
+            InvalidateRect(hWnd, &rt2, TRUE);
 
-        sprintf_s(szFibonacciStr, (size_t)iSTR_SIZE - 1, 
-                  "Thread: %d; n: %I64u",
-            dwCurrThrID, iFibonacci_n);
-        InvalidateRect(hWnd, &rt2, TRUE);
+            std::cout << "Потік " << dwCurrThrID << " типу 2 завершує роботу.\n";
+            ReleaseMutex(hMutexType2);
+        }
+        else if (iThread2Counter == 2) {
+            sprintf_s(szFibonacciStr, (size_t)iSTR_SIZE - 1,
+                "Thread: %d; n: %I64u",
+                dwCurrThrID, iFibonacci_n_1);
+            InvalidateRect(hWnd, &rt2, TRUE);
 
-        std::cout << "Потік " << dwCurrThrID << " типу 2 завершує роботу.\n";
-        ReleaseMutex(hMutexType2);
+            std::cout << "Потік " << dwCurrThrID << " типу 2 завершує роботу.\n";
+            ReleaseMutex(hMutexType2);
+        }
+        else {
+            iFibonacci_n = iFibonacci_n_2 + iFibonacci_n_1;
+            iFibonacci_n_2 = iFibonacci_n_1;
+            iFibonacci_n_1 = iFibonacci_n;
+
+            sprintf_s(szFibonacciStr, (size_t)iSTR_SIZE - 1,
+                "Thread: %d; n: %I64u",
+                dwCurrThrID, iFibonacci_n);
+            InvalidateRect(hWnd, &rt2, TRUE);
+
+            std::cout << "Потік " << dwCurrThrID << " типу 2 завершує роботу.\n";
+            ReleaseMutex(hMutexType2);
+        }
     }
     return 0;
 }
@@ -522,4 +542,17 @@ void WaitForThreadsAndSyncHandles() {
     WaitForSingleObject(hMutexType3, INFINITE);
     WaitForSingleObject(hMutexType4, INFINITE);
     WaitForSingleObject(hEvent, INFINITE);    
+}
+
+void CloseHandles() {
+    for (int i = vhThreads.size(); i > 0; i--) {
+        CloseHandle(vhThreads[i]);
+        vdwThreadIDs.pop_back();
+        vhThreads.pop_back();
+    }
+    CloseHandle(hMutexType1);
+    CloseHandle(hMutexType2);
+    CloseHandle(hMutexType3);
+    CloseHandle(hMutexType4);
+    CloseHandle(hEvent);
 }
